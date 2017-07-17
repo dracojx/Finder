@@ -2,6 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<link rel="shortcut icon" href="favicon.ico" />
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="favicon.ico" />
 <title>订单查询</title>
 <script type="text/javascript" src="webjars/jquery/2.1.4/jquery.js"></script>
 <script type="text/javascript">
@@ -38,7 +41,7 @@
 					url : url,
 					type : "POST",
 					async : true,
-					timeout : 30000,
+					timeout : 120000,
 					data : $("#form").serialize(),
 					dataType : "json",
 					beforeSend : function() {
@@ -73,10 +76,15 @@
 
 								}
 								guids.prepend("<li class='header'>GUID</li>");
-								$("#result_list").prepend($("<article class='message'></article>").append(guids));
+								$("#result_list").append($("<article class='message'></article>").append(guids));
 							}
 						}
 						$("#submit").removeAttr("disabled");
+						$("#result").show();
+					},
+					error : function() {
+						$("#submit").removeAttr("disabled");
+						$("#result_message").append($("<article class='error'></article>").text("查询超时"));
 						$("#result").show();
 					}
 				});
@@ -159,9 +167,10 @@ section article{
 			<article>
 				<b>环境</b>
 				<span>
-					<span class="radio">300<input type="hidden" value="300" /></span>
-					<span class="radio checked">500<input type="hidden" value="500" /></span>
-					<input type="hidden" name="client" value="500" />
+					<span class="radio">300<input type="hidden" value="DP1" /></span>
+					<span class="radio checked">500<input type="hidden" value="QP1" /></span>
+					<span class="radio">800<input type="hidden" value="PP1" /></span>
+					<input type="hidden" name="client" value="QP1" />
 				</span>
 			</article>
 			<article>

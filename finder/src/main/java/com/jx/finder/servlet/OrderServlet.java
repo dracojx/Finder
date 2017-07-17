@@ -21,6 +21,7 @@ import org.dom4j.io.SAXReader;
 
 import com.google.gson.Gson;
 import com.jx.finder.def.ConnectionUtil;
+import com.jx.finder.def.Constants;
 import com.jx.finder.def.DataUtil;
 import com.jx.finder.def.Message;
 
@@ -75,137 +76,498 @@ public class OrderServlet extends HttpServlet {
 		Set<Message> set = new TreeSet<Message>();
 
 		Connection conn = ConnectionUtil.getConnect(client);
-
-		set.addAll(findSD162(conn, orderNumber));
-		set.addAll(findSD173(conn, orderNumber));
-
-		if (!set.isEmpty()) {
-			set.addAll(findSD140(conn, orderNumber));
-		}
-
-		return set;
-	}
-
-	private static Set<Message> findSD140(Connection conn, String orderNumber)
-			throws Exception {
-		Set<Message> set = new TreeSet<Message>();
 		Statement statement = conn.createStatement();
-		statement.setQueryTimeout(1);
-		String sql = "SELECT MSG_ID, STATUS, SENT_RECV_TIME, MSG_BYTES FROM BC_MSG WHERE ACTION_NAME='SI_SD140_In_Asy'";
+		statement.setQueryTimeout(20);
+		String sql = "SELECT MSG_ID, STATUS, SENT_RECV_TIME, ACTION_NAME, MSG_BYTES FROM BC_MSG "
+				+ "WHERE ACTION_NAME IN ("
+				+ "'SI_SD134_ECC_Out_Asy',"
+				+ "'SI_SD135_ECC_Out_Asy',"
+				+ "'SI_SD136_ECC_Out_Asy',"
+				+ "'SI_SD137_ECC_Out_Asy',"
+				+ "'SI_SD138_ECC_Out_Asy',"
+				+ "'SI_SD139_ECC_Out_Asy',"
+				+ "'SI_SD140_In_Asy',"
+				+ "'SI_SD145_ECC_Out_Asy',"
+				+ "'SI_SD154_ECC_Out_Asy',"
+				+ "'SI_SD155_ECC_Out_Asy',"
+				+ "'SI_SD162_ECC_Out_Asy',"
+				+ "'SI_SD173_ECC_Out_Asy',"
+				+ "'SI_SD174_ECC_Out_Asy',"
+				+ "'SI_SD175_ECC_Out_Asy',"
+				+ "'SI_SD180_ECC_Out_Asy'" + ")";
+		
+		long time1 = System.currentTimeMillis();
+		
 		ResultSet rs = statement.executeQuery(sql);
-
-		SAXReader reader = new SAXReader();
-
+		
+		long time2 = System.currentTimeMillis();
+		System.out.println("SQL: " + sql);
+		System.out.println("Query Time: " + ((float)(time2 - time1) / 1000) + "s");
+		
 		while (rs.next()) {
-			Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
-			String msgBytes = new String(MSG_BYTES.getBytes(1,
-					(int) MSG_BYTES.length()), "UTF-8");
-			int beginIndex = msgBytes.indexOf("<?xml");
-			int endIndex = msgBytes.lastIndexOf(">") + 1;
+			String actionName = rs.getString("ACTION_NAME");
+			Message message = null;
+			if (Constants.ACTION_NAME_SD134.equals(actionName)) {
+				message = sd134(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD135.equals(actionName)) {
+				message = sd135(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD136.equals(actionName)) {
+				message = sd136(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD137.equals(actionName)) {
+				message = sd137(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD138.equals(actionName)) {
+				message = sd138(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD139.equals(actionName)) {
+				message = sd139(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD140.equals(actionName)) {
+				message = sd140(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD145.equals(actionName)) {
+				message = sd145(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD154.equals(actionName)) {
+				message = sd154(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD155.equals(actionName)) {
+				message = sd155(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD162.equals(actionName)) {
+				message = sd162(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD173.equals(actionName)) {
+				message = sd173(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD174.equals(actionName)) {
+				message = sd174(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD175.equals(actionName)) {
+				message = sd175(rs, orderNumber);
+			} else if (Constants.ACTION_NAME_SD180.equals(actionName)) {
+				message = sd180(rs, orderNumber);
+			}
 
-			if (beginIndex >= 0) {
-				String xml = msgBytes.substring(beginIndex, endIndex);
-				Document document = reader.read(new ByteArrayInputStream(xml
-						.getBytes("UTF-8")));
-				Element order = document.getRootElement().element("arg1")
-						.element("ORDER");
-				if (orderNumber.equalsIgnoreCase(order.elementText("BSTKD"))) {
-					String guid = rs.getString("MSG_ID");
-					String status = rs.getString("STATUS");
-					String time = DataUtil.parseTime(rs
-							.getString("SENT_RECV_TIME"));
-					String code = order.elementText("ZSTATUS") + " "
-							+ order.elementText("STATXT");
-					set.add(Message.create(guid, "SD140", code, status, time));
-				}
+			if (message != null) {
+				set.add(message);
 			}
 		}
 
+
+		long time3 = System.currentTimeMillis();
+		System.out.println("Parse Time: " + ((float)(time3 - time2) / 1000) + "s");
+		
 		rs.close();
 		statement.close();
+		
 		return set;
 	}
 
-	private static Set<Message> findSD162(Connection conn, String orderNumber)
+	private static Message sd134(ResultSet rs, String orderNumber)
 			throws Exception {
-		Set<Message> set = new TreeSet<Message>();
-		Statement statement = conn.createStatement();
-		statement.setQueryTimeout(1);
-		String sql = "SELECT MSG_ID, STATUS, SENT_RECV_TIME, MSG_BYTES FROM BC_MSG WHERE ACTION_NAME='SI_SD162_ECC_Out_Asy'";
-		ResultSet rs = statement.executeQuery(sql);
-
 		SAXReader reader = new SAXReader();
-
-		while (rs.next()) {
-			Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
-			String msgBytes = new String(MSG_BYTES.getBytes(1,
-					(int) MSG_BYTES.length()), "UTF-8");
-			int beginIndex = msgBytes.indexOf("<n");
-			int endIndex = msgBytes.lastIndexOf(">") + 1;
-
-			if (beginIndex >= 0) {
-				String xml = msgBytes.substring(beginIndex, endIndex);
-				Document document = reader.read(new ByteArrayInputStream(xml
-						.getBytes("UTF-8")));
-				Element header = document.getRootElement().element("XML_DATA")
-						.element("SD162").element("header");
-				if (orderNumber.equalsIgnoreCase(header
-						.elementText("order_number"))) {
-					String guid = rs.getString("MSG_ID");
-					String status = rs.getString("STATUS");
-					String time = DataUtil.parseTime(rs
-							.getString("SENT_RECV_TIME"));
-					String code = header.elementText("order_type") + "  "
-							+ header.elementText("message_purpose");
-					set.add(Message.create(guid, "SD162", code, status, time));
-				}
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+	
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA")
+					.element("HEADER");
+			if (orderNumber.equalsIgnoreCase(element.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("order_type") + " "
+						+ element.elementText("message_purpose");
+				return Message.create(guid, "SD134", code, status, time);
 			}
 		}
-
-		rs.close();
-		statement.close();
-		return set;
+		return null;
 	}
 
-	private static Set<Message> findSD173(Connection conn, String orderNumber)
+	private static Message sd135(ResultSet rs, String orderNumber)
 			throws Exception {
-		Set<Message> set = new TreeSet<Message>();
-		Statement statement = conn.createStatement();
-		statement.setQueryTimeout(10);
-		String sql = "SELECT MSG_ID, STATUS, SENT_RECV_TIME, MSG_BYTES FROM BC_MSG WHERE ACTION_NAME='SI_SD173_ECC_Out_Asy'";
-		ResultSet rs = statement.executeQuery(sql);
+		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+	
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA")
+					.element("HEADER");
+			if (orderNumber.equalsIgnoreCase(element.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("sales_type") + " ZDSI0005";
+				return Message.create(guid, "SD135", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd136(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+	
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA")
+					.element("HEADER");
+			if (orderNumber.equalsIgnoreCase(element.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("sales_type") + " ZDSI0006";
+				return Message.create(guid, "SD136", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd137(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+	
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA")
+					.element("HEADER");
+			if (orderNumber.equalsIgnoreCase(element.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("sales_type") + " ZWMI0070";
+				return Message.create(guid, "SD137", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd138(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+	
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA")
+					.element("HEADER");
+			if (orderNumber.equalsIgnoreCase(element.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("sales_type") + " ZBILL";
+				return Message.create(guid, "SD138", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd139(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+	
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA");
+			if (orderNumber.equalsIgnoreCase(element.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("sales_type") + " ZDELVRY";
+				return Message.create(guid, "SD139", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd140(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<?xml");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("arg1")
+					.element("ORDER");
+			if (orderNumber.equalsIgnoreCase(element.elementText("BSTKD"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("ZSTATUS") + " "
+						+ element.elementText("STATXT");
+				return Message.create(guid, "SD140", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd145(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+	
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA").element("SD145");
+			if (orderNumber.equalsIgnoreCase(element.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = "送货 " + element.elementText("vtweg");
+				return Message.create(guid, "SD145", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd154(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+	
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA").element("SD154");
+			if (orderNumber.equalsIgnoreCase(element.elementText("BSTKD"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = "安装 " + element.elementText("BSARK");
+				return Message.create(guid, "SD154", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd155(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+	
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA").element("SD155").element("header");
+			if (orderNumber.equalsIgnoreCase(element.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("order_type") + " " + element.elementText("message_purpose");
+				return Message.create(guid, "SD154", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd162(ResultSet rs, String orderNumber)
+			throws Exception {
 
 		SAXReader reader = new SAXReader();
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
 
-		while (rs.next()) {
-			Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
-			String msgBytes = new String(MSG_BYTES.getBytes(1,
-					(int) MSG_BYTES.length()), "UTF-8");
-			int beginIndex = msgBytes.indexOf("<n");
-			int endIndex = msgBytes.lastIndexOf(">") + 1;
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("XML_DATA")
+					.element("SD162").element("header");
+			if (orderNumber.equalsIgnoreCase(element
+					.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("order_type") + "  "
+						+ element.elementText("message_purpose");
+				return Message.create(guid, "SD162", code, status, time);
+			}
+		}
+		return null;
+	}
 
-			if (beginIndex >= 0) {
-				String xml = msgBytes.substring(beginIndex, endIndex);
-				Document document = reader.read(new ByteArrayInputStream(xml
-						.getBytes("UTF-8")));
-				Element header = document.getRootElement().element("SD173")
-						.element("header");
-				if (orderNumber.equalsIgnoreCase(header
-						.elementText("order_number"))) {
-					String guid = rs.getString("MSG_ID");
-					String status = rs.getString("STATUS");
-					String time = DataUtil.parseTime(rs
-							.getString("SENT_RECV_TIME"));
-					String code = header.elementText("order_type") + "  "
-							+ header.elementText("message_purpose");
-					set.add(Message.create(guid, "SD173", code, status, time));
-				}
+	private static Message sd173(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("SD173")
+					.element("header");
+			if (orderNumber.equalsIgnoreCase(element
+					.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("order_type") + "  "
+						+ element.elementText("message_purpose");
+				return Message.create(guid, "SD173", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd174(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("SD174")
+					.element("header");
+			if (orderNumber.equalsIgnoreCase(element
+					.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("sales_type") + " ZDELVRY";
+				return Message.create(guid, "SD174", code, status, time);
+			}
+		}
+		return null;
+	}
+
+	private static Message sd175(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("SD175");
+			if (orderNumber.equalsIgnoreCase(element
+					.elementText("order_number"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("sales_type") + " ZDELVRY";
+				return Message.create(guid, "SD175", code, status, time);
+			}
+
+		}
+
+		return null;
+	}
+
+	private static Message sd180(ResultSet rs, String orderNumber)
+			throws Exception {
+		SAXReader reader = new SAXReader();
+
+		Blob MSG_BYTES = rs.getBlob("MSG_BYTES");
+		String msgBytes = new String(MSG_BYTES.getBytes(1,
+				(int) MSG_BYTES.length()), "UTF-8");
+		int beginIndex = msgBytes.indexOf("<n");
+		int endIndex = msgBytes.lastIndexOf(">") + 1;
+
+		if (beginIndex >= 0) {
+			String xml = msgBytes.substring(beginIndex, endIndex);
+			Document document = reader.read(new ByteArrayInputStream(xml
+					.getBytes("UTF-8")));
+			Element element = document.getRootElement().element("SD180");
+			if (orderNumber.equalsIgnoreCase(element
+					.elementText("ORDER_NUNBER"))) {
+				String guid = rs.getString("MSG_ID");
+				String status = rs.getString("STATUS");
+				String time = DataUtil
+						.parseTime(rs.getString("SENT_RECV_TIME"));
+				String code = element.elementText("SALES_TYPE") + " ZBILL";
+				return Message.create(guid, "SD180", code, status, time);
 			}
 		}
 
-		rs.close();
-		statement.close();
-		return set;
+		return null;
 	}
 
 }

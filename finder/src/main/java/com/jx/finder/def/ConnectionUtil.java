@@ -15,49 +15,66 @@ import javax.sql.DataSource;
 public class ConnectionUtil {
 	private static ConnectionUtil instance = new ConnectionUtil();
 	
-	private Connection connect300;
-	private Connection connect500;
+	private Connection connectDP1;
+	private Connection connectQP1;
+	private Connection connectPP1;
 	
 	private ConnectionUtil() {
 		try {
-			connect300 = connect300();
-			connect500 = connect500();
+			connectDP1 = connectDP1();
+			connectQP1 = connectQP1();
+			connectPP1 = connectPP1();
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	private static Connection connect300() throws Exception {
+	private static Connection connectDP1() throws Exception {
 		Context ctx = new InitialContext();
 		DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/dp1");
 		return ds.getConnection();
 	}
 	
-	private static Connection connect500() throws Exception {
+	private static Connection connectQP1() throws Exception {
 		Context ctx = new InitialContext();
 		DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/qp1");
 		return ds.getConnection();
 	}
 	
-	private Connection getConnect300() throws Exception {
-		if(connect300.isClosed()) {
-			connect300 = connect300();
+	private static Connection connectPP1() throws Exception {
+		Context ctx = new InitialContext();
+		DataSource ds = (DataSource) ctx.lookup("java:comp/env/jdbc/pp1");
+		return ds.getConnection();
+	}
+	
+	private Connection getConnectDP1() throws Exception {
+		if(connectDP1.isClosed()) {
+			connectDP1 = connectDP1();
 		}
-		return connect300;
+		return connectDP1;
 	}
 
-	private Connection getConnect500() throws Exception {
-		if(connect500.isClosed()) {
-			connect500 = connect500();
+	private Connection getConnectQP1() throws Exception {
+		if(connectQP1.isClosed()) {
+			connectQP1 = connectQP1();
 		}
-		return connect500;
+		return connectQP1;
+	}
+
+	private Connection getConnectPP1() throws Exception {
+		if(connectPP1.isClosed()) {
+			connectPP1 = connectQP1();
+		}
+		return connectPP1;
 	}
 
 	public static Connection getConnect(String client) throws Exception {
-		if("300".equals(client)) {
-			return instance.getConnect300();
-		} else if("500".equals(client)) {
-			return instance.getConnect500();
+		if(Constants.CLIENT_DP1.equals(client)) {
+			return instance.getConnectDP1();
+		} else if(Constants.CLIENT_QP1.equals(client)) {
+			return instance.getConnectQP1();
+		} else if(Constants.CLIENT_PP1.equals(client)) {
+			return instance.getConnectPP1();
 		}
 		return null;
 	}
