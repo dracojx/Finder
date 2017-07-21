@@ -5,28 +5,39 @@
 <link rel="shortcut icon" href="favicon.ico" />
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="apple-touch-icon-precomposed" href="favicon.ico" />
-<title>订单查询</title>
+<title>单据查询</title>
 <script type="text/javascript" src="webjars/jquery/2.1.4/jquery.js"></script>
 <script type="text/javascript">
 	$(document).ready(
 			function() {
-				$("#submit").click(
-						function(e) {
-							e.preventDefault();
-							if ($(e).attr("disabled") != "disabled"
-									&& $("#order_number").val() != "") {
-								ajax("order");
-							}
-						});
-				
-				$("span.radio").click(function() {
-					if(!$(this).hasClass("checked")) {
-						$("span.radio.checked").removeClass("checked");
-						$(this).addClass("checked");
-						$(this).nextAll(":hidden").val($(this).find(":hidden").val());
+				init();
+			});
+	
+	function init() {
+		var path = window.location.pathname;
+		if(path.endsWith("delivery")) {
+			$("#radio_type .checked").removeClass("checked");
+			$("#radio_type #radio_type_delivery").addClass("checked");
+			$("#radio_type #type").val("delivery");
+		}
+
+		$("#submit").click(
+				function(e) {
+					e.preventDefault();
+					if ($(e).attr("disabled") != "disabled"
+							&& $("#keyword").val() != "") {
+						ajax("documents");
 					}
 				});
-			});
+		
+		$("span.radio").click(function() {
+			if(!$(this).hasClass("checked")) {
+				$(this).siblings("span.radio.checked").removeClass("checked");
+				$(this).addClass("checked");
+				$(this).nextAll(":hidden").val($(this).find(":hidden").val());
+			}
+		});
+	}
 
 	var STATUS = {
 	              	"DLNG": "处理中",
@@ -69,6 +80,9 @@
 									ul.append($("<li class='code'></li>").text(x.code));
 									ul.append($("<li class='status " + x.status + "'></li>").text(status));
 									ul.append($("<li class='interface_id'></li>").text(x.interfaceId));
+									if(x.keyword != undefined) {
+										ul.append($("<li></li>").text(x.keyword));
+									}
 									ul.append($("<li></li>").text(x.time));
 									ul.append($("<li class='guid'></li>").text(x.guid));
 									$("#result_list").prepend($("<article class='message'></article>").append(ul));
@@ -161,7 +175,7 @@ section article{
 	<nav></nav>
 	<section id="searcher">
 		<header>
-			<h1>订单查询</h1>
+			<h1>单据查询</h1>
 		</header>
 		<form id="form" action="data">
 			<article>
@@ -174,8 +188,16 @@ section article{
 				</span>
 			</article>
 			<article>
-				<input type="search" id="order_number" name="order_number"
-					autofocus="autofocus" autocomplete="off" placeholder="Order Number" />
+				<b>类型</b>
+				<span id="radio_type">
+					<span id="radio_type_order" class="radio checked">订单<input type="hidden" value="order" /></span>
+					<span id="radio_type_delivery" class="radio">交货单<input type="hidden" value="delivery" /></span>
+					<input type="hidden" id="type" name="type" value="order" />
+				</span>
+			</article>
+			<article>
+				<input type="search" id="keyword" name="keyword"
+					autofocus="autofocus" autocomplete="off" placeholder="订单 交货单" />
 				<input type="submit" id="submit" value="查询" />
 			</article>
 		</form>
