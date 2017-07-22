@@ -18,38 +18,35 @@ import org.dom4j.io.SAXReader;
  * 
  */
 public class ConvertUtil {
-	private static final SAXReader READER = new SAXReader();
 
 	public static String blobToString(Blob blob) throws Exception {
 		return new String(blob.getBytes(1, (int) blob.length()), "UTF-8");
 	}
 
-	public static Element blobToElement(Blob blob, String begin, String end)
+	public static Element blobToElement(SAXReader reader, Blob blob, String begin, String end)
 			throws Exception {
 		String msg = new String(blob.getBytes(1, (int) blob.length()), "UTF-8");
 		int beginIndex = msg.indexOf(begin);
 		int endIndex = msg.lastIndexOf(end) + end.length();
 
-		if (beginIndex >= 0) {
+		if (beginIndex >= 0) {	
 			String xml = msg.substring(beginIndex, endIndex);
-			Document document = READER.read(new ByteArrayInputStream(xml
+			Document document = reader.read(new ByteArrayInputStream(xml
 					.getBytes("UTF-8")));
 			return document.getRootElement();
 		}
 		return null;
 	}
 
-	public static Element stringToElement(String xml) {
-		xml = xml.replace("<![CDATA[", "");
-		xml = xml.substring(0, xml.length() - 3);
+	public static Element stringToElement(SAXReader reader, String xml) {
+		xml = xml.replace("<![CDATA[", "").replace("]]>", "");
 		Document document;
 		try {
-			document = READER.read(new ByteArrayInputStream(xml
+			document = reader.read(new ByteArrayInputStream(xml
 					.getBytes("UTF-8")));
 		} catch (Exception e) {
 			return null;
 		}
-
 		return document.getRootElement();
 	}
 
