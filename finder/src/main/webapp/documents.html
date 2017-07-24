@@ -8,14 +8,20 @@
 <title>单据查询</title>
 <script type="text/javascript" src="webjars/jquery/2.1.4/jquery.js"></script>
 <script type="text/javascript">
-	$(document).ready(
-			function() {
-				init();
-			});
-	
+	$(document).ready(function() {
+		init();
+	});
+
 	function init() {
+
+		if (typeof String.prototype.endsWith != 'function') {
+			String.prototype.endsWith = function(suffix) {
+				return this.indexOf(suffix, this.length - suffix.length) !== -1;
+			};
+		}
+
 		var path = window.location.pathname;
-		if(path.endsWith("delivery")) {
+		if (path.endsWith("delivery")) {
 			$("#radio_type .checked").removeClass("checked");
 			$("#radio_type #radio_type_delivery").addClass("checked");
 			$("#radio_type #type").val("delivery");
@@ -29,9 +35,9 @@
 						ajax("documents");
 					}
 				});
-		
+
 		$("span.radio").click(function() {
-			if(!$(this).hasClass("checked")) {
+			if (!$(this).hasClass("checked")) {
 				$(this).siblings("span.radio.checked").removeClass("checked");
 				$(this).addClass("checked");
 				$(this).nextAll(":hidden").val($(this).find(":hidden").val());
@@ -40,15 +46,16 @@
 	}
 
 	var STATUS = {
-	              	"DLNG": "处理中",
-	              	"DLVD": "完成",
-	              	"NDLV": "失败  可重推",
-	              	"WAIT": "等待",
-	              	"FAIL": "失败  不可重推"
-				};
+		"DLNG" : "处理中",
+		"DLVD" : "完成",
+		"NDLV" : "失败  可重推",
+		"WAIT" : "等待",
+		"FAIL" : "失败  不可重推"
+	};
 
 	function ajax(url) {
-		$.ajax({
+		$
+				.ajax({
 					url : url,
 					type : "POST",
 					async : true,
@@ -63,34 +70,53 @@
 					},
 					success : function(data) {
 						if (data.errorMessage) {
-							$("#result_message").append($("<article class='error'></article>").text(data.errorMessage));
+							$("#result_message").append(
+									$("<article class='error'></article>")
+											.text(data.errorMessage));
 						} else {
 							if (data.length == 0) {
-								$("#result_message").append($("<article></article>").text("未查到数据"));
+								$("#result_message").append(
+										$("<article></article>").text("未查到数据"));
 							} else {
 								var guids = $("<ul></ul>");
 								for (var i = 0; i < data.length; i++) {
 									var x = data[i];
 									var status = STATUS[x.status];
-									if(status == undefined) {
+									if (status == undefined) {
 										status = x.status;
 									}
-									
+
 									var ul = $("<ul>");
-									ul.append($("<li class='code'></li>").text(x.code));
-									ul.append($("<li class='status " + x.status + "'></li>").text(status));
-									ul.append($("<li class='interface_id'></li>").text(x.interfaceId));
-									if(x.keyword != undefined) {
-										ul.append($("<li></li>").text(x.keyword));
+									ul.append($("<li class='code'></li>").text(
+											x.code));
+									ul
+											.append($(
+													"<li class='status " + x.status + "'></li>")
+													.text(status));
+									ul.append($(
+											"<li class='interface_id'></li>")
+											.text(x.interfaceId));
+									if (x.keyword != undefined) {
+										ul.append($("<li></li>")
+												.text(x.keyword));
 									}
 									ul.append($("<li></li>").text(x.time));
-									ul.append($("<li class='guid'></li>").text(x.guid));
-									$("#result_list").prepend($("<article class='message'></article>").append(ul));
+									ul.append($("<li class='guid'></li>").text(
+											x.guid));
+									$("#result_list")
+											.prepend(
+													$(
+															"<article class='message'></article>")
+															.append(ul));
 									guids.prepend($("<li></li>").text(x.guid));
 
 								}
 								guids.prepend("<li class='header'>GUID</li>");
-								$("#result_list").append($("<article class='message'></article>").append(guids));
+								$("#result_list")
+										.append(
+												$(
+														"<article class='message'></article>")
+														.append(guids));
 							}
 						}
 						$("#submit").removeAttr("disabled");
@@ -98,7 +124,9 @@
 					},
 					error : function() {
 						$("#submit").removeAttr("disabled");
-						$("#result_message").append($("<article class='error'></article>").text("查询超时"));
+						$("#result_message").append(
+								$("<article class='error'></article>").text(
+										"查询超时"));
 						$("#result").show();
 					}
 				});
@@ -109,12 +137,12 @@ body {
 	background-image: url(images/background.jpg);
 }
 
-section header{
+section header {
 	margin-left: 20px;
 	margin-rigth: 20px;
 }
 
-section article{
+section article {
 	margin: 0 40px 20px 40px;
 	padding: 2px 20px;
 }
@@ -156,12 +184,13 @@ section article{
 	margin-bottom: 5px;
 }
 
-#result #result_list ul li.code, #result #result_list ul li.header {
+#result #result_list ul li.code,#result #result_list ul li.header {
 	font-size: 20px;
 	font-weight: bold;
 }
 
-#result #result_list ul li.status.NDLV,#result #result_list ul li.status.WAIT,#result #result_list ul li.status.FAIL {
+#result #result_list ul li.status.NDLV,#result #result_list ul li.status.WAIT,#result #result_list ul li.status.FAIL
+	{
 	color: red;
 }
 
@@ -179,26 +208,25 @@ section article{
 		</header>
 		<form id="form" action="data">
 			<article>
-				<b>环境</b>
-				<span>
-					<span class="radio">300<input type="hidden" value="DP1" /></span>
-					<span class="radio checked">500<input type="hidden" value="QP1" /></span>
-					<span class="radio">800<input type="hidden" value="PP1" /></span>
-					<input type="hidden" name="client" value="QP1" />
+				<b>环境</b> <span> <span class="radio">300<input
+						type="hidden" value="DP1" /></span> <span class="radio checked">500<input
+						type="hidden" value="QP1" /></span> <span class="radio">800<input
+						type="hidden" value="PP1" /></span> <input type="hidden" name="client"
+					value="QP1" />
 				</span>
 			</article>
 			<article>
-				<b>类型</b>
-				<span id="radio_type">
-					<span id="radio_type_order" class="radio checked">订单<input type="hidden" value="order" /></span>
-					<span id="radio_type_delivery" class="radio">交货单<input type="hidden" value="delivery" /></span>
-					<input type="hidden" id="type" name="type" value="order" />
+				<b>类型</b> <span id="radio_type"> <span id="radio_type_order"
+					class="radio checked">订单<input type="hidden" value="order" /></span>
+					<span id="radio_type_delivery" class="radio">交货单<input
+						type="hidden" value="delivery" /></span> <input type="hidden" id="type"
+					name="type" value="order" />
 				</span>
 			</article>
 			<article>
 				<input type="search" id="keyword" name="keyword"
-					autofocus="autofocus" autocomplete="off" placeholder="订单 交货单" />
-				<input type="submit" id="submit" value="查询" />
+					autofocus="autofocus" autocomplete="off" placeholder="订单 交货单" /> <input
+					type="submit" id="submit" value="查询" />
 			</article>
 		</form>
 	</section>
@@ -206,8 +234,7 @@ section article{
 		<header>
 			<h1>查询结果</h1>
 		</header>
-		<section id="result_list">
-		</section>
+		<section id="result_list"></section>
 		<section id="result_message"></section>
 	</section>
 	<footer></footer>
