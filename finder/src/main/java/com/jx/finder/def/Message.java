@@ -2,6 +2,7 @@ package com.jx.finder.def;
 
 
 
+
 /** 
  * @author Draco
  * @version 1.0
@@ -14,48 +15,34 @@ public class Message implements Comparable<Message> {
 	private String code;
 	private String status;
 	private String time;
+	private String keyword;
+	private String sortKey;
 	
-	/*
-	public static void main(String[] args) {
-		Set<Message> set = new TreeSet<Message>();
-		Message m1 = Message.create("", "", "", "", "20170716144257");
-		Message m2 = Message.create("", "", "", "", "20200714144257");
-		Message m3 = Message.create("", "", "", "", "20170718144257");
-		Message m4 = Message.create("", "", "", "", "20170707144257");
-		Message m5 = Message.create("", "", "", "", "20140716144257");
-		Message m6 = Message.create("", "", "", "", "20160716144257");
-		
-		set.add(m1);
-		set.add(m2);
-		set.add(m3);
-		set.add(m4);
-		set.add(m5);
-		set.add(m6);
-		
-		Iterator<Message> it = set.iterator();
-		while(it.hasNext()) {
-			System.out.println(it.next().time);
-		}
-		
-		Gson gson = new GsonBuilder().create();
-		System.out.println(gson.toJson(set));
-	}
-	*/
 	
-	private Message(String guid, String interfaceId, String code, String status, String time) {
+	private Message(String guid, String interfaceId, String code, String status, String time) throws Exception {
 		this.guid = guid.toUpperCase();
 		this.interfaceId = interfaceId;
 		this.code = code;
 		this.status = status;
-		this.time = time;
+		this.time = ConvertUtil.parseTime(time);
+		this.sortKey = time;
+	}
+
+	private Message(String guid, String interfaceId, String code, String status, String time, String keyword) throws Exception {
+		this(guid, interfaceId, code, status, time);
+		this.keyword = keyword;
 	}
 	
-	public static Message create(String guid, String interfaceId, String code, String status, String time) {
+	public static Message create(String guid, String interfaceId, String code, String status, String time) throws Exception {
 		return new Message(guid, interfaceId, code, status, time);
 	}
 	
+	public static Message create(String guid, String interfaceId, String code, String status, String time, String keyword) throws Exception {
+		return new Message(guid, interfaceId, code, status, time, keyword);
+	}
+	
 	public int compareTo(Message o) {
-		return this.time.compareTo(o.time);
+		return this.sortKey.compareTo(o.sortKey);
 	}
 
 	public String getGuid() {
@@ -96,5 +83,18 @@ public class Message implements Comparable<Message> {
 
 	public void setTime(String time) {
 		this.time = time;
+	}
+	
+	public String getKeyword() {
+		return keyword;
+	}
+
+	public void setKeyword(String keyword) {
+		this.keyword = keyword;
+	}
+
+	@Override
+	public String toString() {
+		return time + " : " + code + " " + interfaceId;
 	}
 }

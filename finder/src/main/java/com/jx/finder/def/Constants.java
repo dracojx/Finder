@@ -21,10 +21,17 @@ public class Constants {
 	public static final String ACTION_NAME_SD174 = "SI_SD174_ECC_Out_Asy";
 	public static final String ACTION_NAME_SD175 = "SI_SD175_ECC_Out_Asy";
 	public static final String ACTION_NAME_SD180 = "SI_SD180_ECC_Out_Asy";
+	public static final String ACTION_NAME_WMS023 = "SI_WMS023_In_Asy";
+	public static final String ACTION_NAME_WMS025 = "SI_WMS025_In_Asy";
+	public static final String ACTION_NAME_WMS027 = "SI_WMS027_In_Asy";
+	public static final String ACTION_NAME_WMS095 = "SI_WMS095_In_Asy";
 	
 	
 	public static final String CLIENT_DP1 = "DP1";
 	public static final String CLIENT_QP1 = "QP1";
 	public static final String CLIENT_PP1 = "PP1";
+	
+	public static final String TYPE_ORDER = "order";
+	public static final String TYPE_DELIVERY = "delivery";
 	
 }
