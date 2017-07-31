@@ -34,4 +34,62 @@ public class Constants {
 	public static final String TYPE_ORDER = "order";
 	public static final String TYPE_DELIVERY = "delivery";
 	
+	public static final String TAG_WMS023_DELIVERY = "VBELN";
+	public static final String TAG_WMS023_ORDER_NUMBER = "BSTKD_E";
+	
+	public static final String TAG_WMS025_DELIVERY = "VBELN";
+	public static final String TAG_WMS027_DELIVERY = "VBELN";
+	
+	public static final String TAG_WMS095_DELIVERY = "VBELN";
+	public static final String TAG_WMS095_ORDER_NUMBER = "BSTKD_E";
+	
+
+	public static final String TAG_SD134_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD134_ORDER_TYPE = "order_type";
+	public static final String TAG_SD134_MESSAGE_PURPOSE = "message_purpose";
+	
+	public static final String TAG_SD135_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD135_SALES_TYPE = "sales_type";
+	
+	public static final String TAG_SD136_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD136_SALES_TYPE = "sales_type";
+	
+	public static final String TAG_SD137_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD137_SALES_TYPE = "sales_type";
+	
+	public static final String TAG_SD138_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD138_SALES_TYPE = "sales_type";
+	
+	public static final String TAG_SD139_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD139_SALES_TYPE = "sales_type";
+
+	public static final String TAG_SD140_ORDER_NUMBER = "BSTKD";
+	public static final String TAG_SD140_STATUS_CODE = "ZSTATUS";
+	public static final String TAG_SD140_STATUS_TEXT = "STATXT";
+
+	public static final String TAG_SD145_ORDER_NUMBER = "order_number";
+
+	public static final String TAG_SD154_ORDER_NUMBER = "BSTKD";
+
+	public static final String TAG_SD155_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD155_ORDER_TYPE = "order_type";
+	public static final String TAG_SD155_MESSAGE_PURPOSE = "message_purpose";
+
+	public static final String TAG_SD162_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD162_ORDER_TYPE = "order_type";
+	public static final String TAG_SD162_MESSAGE_PURPOSE = "message_purpose";
+
+	public static final String TAG_SD173_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD173_ORDER_TYPE = "order_type";
+	public static final String TAG_SD173_MESSAGE_PURPOSE = "message_purpose";
+	
+	public static final String TAG_SD174_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD174_SALES_TYPE = "sales_type";
+	
+	public static final String TAG_SD175_ORDER_NUMBER = "order_number";
+	public static final String TAG_SD175_SALES_TYPE = "sales_type";
+	
+	public static final String TAG_SD180_ORDER_NUMBER = "ORDER_NUNBER";
+	public static final String TAG_SD180_SALES_TYPE = "SALES_TYPE";
+	
 }

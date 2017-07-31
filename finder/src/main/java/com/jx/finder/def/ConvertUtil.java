@@ -1,6 +1,8 @@
 package com.jx.finder.def;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -21,6 +23,29 @@ public class ConvertUtil {
 
 	public static String blobToString(Blob blob) throws Exception {
 		return new String(blob.getBytes(1, (int) blob.length()), "UTF-8");
+	}
+	
+	public static InputStream blobToInputStream(Blob blob) throws Exception {
+		String content = new String(blob.getBytes(1, (int) blob.length()), "UTF-8");
+		int beginIndex = content.indexOf("<?xml");
+		int endIndex = content.lastIndexOf(">") + 1;
+		return new ByteArrayInputStream(content.substring(beginIndex, endIndex).getBytes(Charset.forName("UTF-8")));
+	}
+	
+	public static InputStream blobToInputStream(Blob blob, String start, String end) throws Exception {
+		String content = new String(blob.getBytes(1, (int) blob.length()), "UTF-8");
+		int beginIndex = content.indexOf(start);
+		int endIndex = content.lastIndexOf(end) + end.length();
+		content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + content.substring(beginIndex, endIndex);
+		return new ByteArrayInputStream(content.getBytes(Charset.forName("UTF-8")));
+	}
+	
+	public static InputStream blobToInputStreamSub(Blob blob) throws Exception {
+		String content = new String(blob.getBytes(1, (int) blob.length()), "UTF-8").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"");
+		
+		int beginIndex = content.lastIndexOf("<![CDATA[") + 9;
+		int endIndex = content.lastIndexOf("]]>");
+		return new ByteArrayInputStream(content.substring(beginIndex, endIndex).getBytes(Charset.forName("UTF-8")));
 	}
 
 	public static Element blobToElement(SAXReader reader, Blob blob, String begin, String end)
