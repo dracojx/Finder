@@ -34,6 +34,9 @@ public class Constants {
 	public static final String TYPE_ORDER = "order";
 	public static final String TYPE_DELIVERY = "delivery";
 	
+	public static final String TARGET_3CDRG = "3CDRG";
+	public static final String TARGET_LMIS = "LMIS";
+	
 	public static final String TAG_WMS023_DELIVERY = "VBELN";
 	public static final String TAG_WMS023_ORDER_NUMBER = "BSTKD_E";
 	

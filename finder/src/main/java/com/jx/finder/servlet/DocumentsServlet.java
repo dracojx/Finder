@@ -38,8 +38,6 @@ import com.jx.finder.def.SD174Handler;
 import com.jx.finder.def.SD175Handler;
 import com.jx.finder.def.SD180Handler;
 import com.jx.finder.def.WMS023Handler;
-import com.jx.finder.def.WMS025Handler;
-import com.jx.finder.def.WMS027Handler;
 import com.jx.finder.def.WMS095Handler;
 
 /**
@@ -84,7 +82,12 @@ public class DocumentsServlet extends HttpServlet {
 			if (Constants.TYPE_ORDER.equals(type)) {
 				json = gson.toJson(findOrder(client, keyword));
 			} else if (Constants.TYPE_DELIVERY.equals(type)) {
-				json = gson.toJson(findDelivery(client, keyword));
+				String target = request.getParameter("target");
+				if(Constants.TARGET_3CDRG.equals(target)) {
+					json = gson.toJson(findDelivery3CDRG(client, keyword));
+				} else if(Constants.TARGET_LMIS.equals(target)) {
+					json = gson.toJson(findDeliveryLMIS(client, keyword));
+				}
 			}
 			out.write(json);
 		} catch (Exception e) {
@@ -189,8 +192,8 @@ public class DocumentsServlet extends HttpServlet {
 		Collections.sort(list);
 		return list;
 	}
-
-	private static List<Message> findDelivery(String client, String delivery)
+	
+	private static List<Message> findDelivery3CDRG(String client, String delivery)
 			throws Exception {
 		List<Message> list = new ArrayList<Message>();
 
@@ -206,8 +209,7 @@ public class DocumentsServlet extends HttpServlet {
 				+ " MSG_BYTES	"
 				+ " FROM BC_MSG	"
 				+ " WHERE "
-				+ " (TO_SERVICE_NAME = 'BC_LMIS' AND ACTION_NAME IN ('SI_WMS023_In_Asy', 'SI_WMS025_In_Asy', 'SI_WMS027_In_Asy')) "
-				+ " OR (TO_SERVICE_NAME = 'BC_3CDRG' AND ACTION_NAME = 'SI_WMS095_In_Asy')";
+				+ " TO_SERVICE_NAME = 'BC_3CDRG' AND ACTION_NAME = 'SI_WMS095_In_Asy'";
 
 		long time1 = System.currentTimeMillis();
 
@@ -222,18 +224,56 @@ public class DocumentsServlet extends HttpServlet {
 		SAXParser parser = factory.newSAXParser();
 		
 		while (rs.next()) {
-			String actionName = rs.getString("ACTION_NAME");
-			Message message = null;
+			Message message = wms095(parser, rs, delivery);
 			
-			if(Constants.ACTION_NAME_WMS023.equals(actionName)) {
-				message = wms023(parser, rs, delivery);
-			} else if(Constants.ACTION_NAME_WMS025.equals(actionName)) {
-				message = wms025(parser, rs, delivery);
-			} else if(Constants.ACTION_NAME_WMS027.equals(actionName)) {
-				message = wms027(parser, rs, delivery);
-			} else if (Constants.ACTION_NAME_WMS095.equals(actionName)) {
-				message = wms095(parser, rs, delivery);
+			if (message != null) {
+				list.add(message);
 			}
+		}
+
+		long time3 = System.currentTimeMillis();
+		System.out.println("Parse Time: " + ((float) (time3 - time2) / 1000)
+				+ "s");
+
+		rs.close();
+		statement.close();
+
+		Collections.sort(list);
+		return list;
+	}
+
+	private static List<Message> findDeliveryLMIS(String client, String delivery)
+			throws Exception {
+		List<Message> list = new ArrayList<Message>();
+
+		Connection conn = ConnectionUtil.getConnect(client);
+		Statement statement = conn.createStatement();
+		statement.setQueryTimeout(20);
+		
+		String sql = "SELECT "
+				+ " MSG_ID,	"
+				+ " STATUS,	"
+				+ " SENT_RECV_TIME,	"
+				+ " ACTION_NAME,	"
+				+ " MSG_BYTES	"
+				+ " FROM BC_MSG	"
+				+ " WHERE "
+				+ " TO_SERVICE_NAME = 'BC_LMIS' AND ACTION_NAME = 'SI_WMS023_In_Asy'";
+
+		long time1 = System.currentTimeMillis();
+
+		ResultSet rs = statement.executeQuery(sql);
+
+		long time2 = System.currentTimeMillis();
+		System.out.println("SQL: " + sql);
+		System.out.println("Query Time: " + ((float) (time2 - time1) / 1000)
+				+ "s");
+
+		SAXParserFactory factory = SAXParserFactory.newInstance();
+		SAXParser parser = factory.newSAXParser();
+		
+		while (rs.next()) {
+			Message message = wms023(parser, rs, delivery);
 			
 			if (message != null) {
 				list.add(message);
@@ -476,40 +516,6 @@ public class DocumentsServlet extends HttpServlet {
 			String keyword = "订单  " + handler.getOrderNumber();
 			return Message.create(guid, "WMS023", code, status, time,
 					keyword);
-		}
-		
-		return null;
-	}
-
-	private static Message wms025(SAXParser parser, ResultSet rs, String delivery)
-			throws Exception {
-		InputStream is = ConvertUtil.blobToInputStreamSub(rs.getBlob("MSG_BYTES"));
-		WMS025Handler handler = WMS025Handler.create(delivery);
-		parser.parse(is, handler);
-		
-		if(handler.isRight()) {
-			String guid = rs.getString("MSG_ID");
-			String status = rs.getString("STATUS");
-			String time = rs.getString("SENT_RECV_TIME");
-			String code = "交货单取消";
-			return Message.create(guid, "WMS025", code, status, time);
-		}
-		
-		return null;
-	}
-
-	private static Message wms027(SAXParser parser, ResultSet rs, String delivery)
-			throws Exception {
-		InputStream is = ConvertUtil.blobToInputStreamSub(rs.getBlob("MSG_BYTES"));
-		WMS027Handler handler = WMS027Handler.create(delivery);
-		parser.parse(is, handler);
-		
-		if(handler.isRight()) {
-			String guid = rs.getString("MSG_ID");
-			String status = rs.getString("STATUS");
-			String time = rs.getString("SENT_RECV_TIME");
-			String code = "发货";
-			return Message.create(guid, "WMS027", code, status, time);
 		}
 		
 		return null;
