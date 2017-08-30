@@ -109,7 +109,7 @@ public class DocumentsServlet extends HttpServlet {
 		String sql = "SELECT "
 				+ " MSG_ID, "
 				+ " STATUS,	"
-				+ " SENT_RECV_TIME,	"
+				+ " TO_CHAR(SENT_RECV_TIME,'YYYY-MM-DD HH24:MI:SS.FF3') AS SENT_RECV_TIME,	"
 				+ " ACTION_NAME,	"
 				+ " MSG_BYTES	"
 				+ "FROM BC_MSG	"
@@ -204,7 +204,7 @@ public class DocumentsServlet extends HttpServlet {
 		String sql = "SELECT "
 				+ " MSG_ID,	"
 				+ " STATUS,	"
-				+ " SENT_RECV_TIME,	"
+				+ " TO_CHAR(SENT_RECV_TIME,'YYYY-MM-DD HH24:MI:SS.FF3') AS SENT_RECV_TIME,	"
 				+ " ACTION_NAME,	"
 				+ " MSG_BYTES	"
 				+ " FROM BC_MSG	"
@@ -253,7 +253,7 @@ public class DocumentsServlet extends HttpServlet {
 		String sql = "SELECT "
 				+ " MSG_ID,	"
 				+ " STATUS,	"
-				+ " SENT_RECV_TIME,	"
+				+ " TO_CHAR(SENT_RECV_TIME,'YYYY-MM-DD HH24:MI:SS.FF3') AS SENT_RECV_TIME,	"
 				+ " ACTION_NAME,	"
 				+ " MSG_BYTES	"
 				+ " FROM BC_MSG	"
@@ -504,7 +504,7 @@ public class DocumentsServlet extends HttpServlet {
 	}
 
 	private static Message wms023(SAXParser parser, ResultSet rs, String delivery) throws Exception {
-		InputStream is = ConvertUtil.blobToInputStreamSub(rs.getBlob("MSG_BYTES"));
+		InputStream is = ConvertUtil.blobToInputStreamSub(rs.getBlob("MSG_BYTES"), "<TMS_HEADER>", "</TMS_HEADER>");
 		WMS023Handler handler = WMS023Handler.create(delivery);
 		parser.parse(is, handler);
 		

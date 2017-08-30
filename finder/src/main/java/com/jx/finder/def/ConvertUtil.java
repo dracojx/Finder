@@ -40,11 +40,11 @@ public class ConvertUtil {
 		return new ByteArrayInputStream(content.getBytes(Charset.forName("UTF-8")));
 	}
 	
-	public static InputStream blobToInputStreamSub(Blob blob) throws Exception {
+	public static InputStream blobToInputStreamSub(Blob blob, String start, String end) throws Exception {
 		String content = new String(blob.getBytes(1, (int) blob.length()), "UTF-8").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"");
 		
-		int beginIndex = content.lastIndexOf("<![CDATA[") + 9;
-		int endIndex = content.lastIndexOf("]]>");
+		int beginIndex = content.lastIndexOf(start);
+		int endIndex = content.lastIndexOf(end) + end.length();
 		return new ByteArrayInputStream(content.substring(beginIndex, endIndex).getBytes(Charset.forName("UTF-8")));
 	}
 
